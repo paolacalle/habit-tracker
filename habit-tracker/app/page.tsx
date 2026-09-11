@@ -52,6 +52,23 @@ export default function Home() {
     await fetchHabits();
   }
 
+  async function completeHabit(habitId: number) {
+    const response = await fetch(`/api/checkIns`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ habitId }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      alert(errorData.error || "Failed to complete habit");
+    }
+
+    await fetchHabits();
+  }
+
   useEffect(() => {
     fetchHabits();
   }, []);
@@ -90,10 +107,22 @@ export default function Home() {
           {habits.map((habit) => (
             <div
               key={habit.id}
-              className="rounded border p-4"
+              className="flex items-center justify-between rounded border p-4"
             >
-              <h2 className="text-xl font-bold">{habit.name}</h2>
-              <p className="text-gray-600">{habit.description}</p>
+              <span>{habit.name}</span>
+
+              {habit.completedToday ? (
+                <span className="font-medium">
+                  Completed
+                </span>
+              ) : (
+                <button
+                  onClick={() => completeHabit(habit.id)}
+                  className="rounded bg-black px-3 py-2 text-white"
+                >
+                  Complete Today
+                </button>
+              )}
             </div>
           ))}
         </div>
