@@ -7,6 +7,7 @@ type Habit = {
   name: string;
   description: string;
   createdAt: Date;
+  completedToday: boolean;
 };
 
 export default function Home() {
