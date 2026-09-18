@@ -3,6 +3,13 @@
 // import { useEffect, useState } from "react";
 // import { HabitWithCheckIn } from "@/app/types/api/habits";
 
+function firstDayOfYear(year: number): number {
+    const firstDayOfYear = new Date(year, 0, 1);
+
+    // 0 -> Sunday, 1 -> Monday, ..., 6 -> Saturday
+    return firstDayOfYear.getDay();
+}
+
 export default function HabitGridMapper(
     habitId: number
 ) {
