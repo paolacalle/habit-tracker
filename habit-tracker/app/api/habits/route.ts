@@ -33,7 +33,13 @@ export async function GET() {
         id: habit.id,
         name: habit.name,
         description: habit.description,
-        completedToday: habit.checkIns.length > 0 && habit.checkIns[0].completed,
+        completedToday: 
+            habit.checkIns.length > 0 && 
+            habit.checkIns[0].completed,
+        reflection:
+            habit.checkIns.length > 0
+                ? habit.checkIns[0].reflection
+                : null,
     }));
 
     return NextResponse.json(result, { status: 200 });

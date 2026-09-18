@@ -30,8 +30,10 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     // clean data 
-    const habitId = body.habitId;
-    const note = body.note?.trim();
+    const habitId = body.habitId ? parseInt(body.habitId) : null;
+    const reflection = body.reflection?.trim() || null;
+
+    console.log("Received check-in data:", { habitId, reflection });
 
     if (!habitId) {
         return NextResponse.json(
@@ -53,12 +55,13 @@ export async function POST(request: Request) {
             }
         },
         update: {
-            completed: true
+            completed: true,
+            reflection: reflection
         },
         create: {
             habitId: habitId,
             date: today,
-            reflection: note,
+            reflection: reflection,
             completed: true,
         }
     });

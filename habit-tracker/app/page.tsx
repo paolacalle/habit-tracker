@@ -6,28 +6,26 @@ type Habit = {
   id: number;
   name: string;
   description: string;
-  createdAt: Date;
   completedToday: boolean;
+  reflection: string | null;
 };
 
 export default function Home() {
-
-  // state to hold the list of habits and the form data
   const [habits, setHabits] = useState<Habit[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
-  // fetch all existing habits from the API when the component mounts
+  const [reflections, setReflections] = useState<
+    Record<number, string>
+  >({});
+
   async function fetchHabits() {
     const response = await fetch("/api/habits");
     const data = await response.json();
 
-    // set the habits state with the fetched data
     setHabits(data);
   }
 
-  // function to handle adding a new habit
-  // if valid, it sends a POST request to the API and updates the habits list
   async function addHabit() {
     if (!name.trim()) {
       alert("Name is required");
@@ -39,31 +37,56 @@ export default function Home() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ name, description }),
+      body: JSON.stringify({
+        name,
+        description,
+      }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
       alert(errorData.error || "Failed to add habit");
+      return;
     }
 
     setName("");
     setDescription("");
+
     await fetchHabits();
   }
 
-  async function completeHabit(habitId: number) {
-    const response = await fetch(`/api/checkIns`, {
+  async function completeHabit(
+    habitId: number,
+    reflection: string | null = null
+  ) {
+    const response = await fetch("/api/checkIns", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ habitId }),
+      body: JSON.stringify({
+        habitId,
+        reflection,
+      }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      alert(errorData.error || "Failed to complete habit");
+      const errorText = await response.text();
+
+      console.error(
+        "Check-in API error:",
+        errorText
+      );
+
+      alert(errorText || "Failed to complete habit");
+      return;
+    }
+
+    if (reflection !== null) {
+      setReflections((prev) => ({
+        ...prev,
+        [habitId]: reflection,
+      }));
     }
 
     await fetchHabits();
@@ -83,14 +106,18 @@ export default function Home() {
         <div className="mb-8 flex gap-2">
           <input
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) =>
+              setName(event.target.value)
+            }
             placeholder="Name of new habit..."
             className="flex-1 rounded border px-4 py-2"
           />
 
           <input
             value={description}
-            onChange={(event) => setDescription(event.target.value)}
+            onChange={(event) =>
+              setDescription(event.target.value)
+            }
             placeholder="Description..."
             className="flex-1 rounded border px-4 py-2"
           />
@@ -103,25 +130,74 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {habits.map((habit) => (
             <div
               key={habit.id}
-              className="flex items-center justify-between rounded border p-4"
+              className="rounded border p-4"
             >
-              <span>{habit.name}</span>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">
+                    {habit.name}
+                  </p>
 
-              {habit.completedToday ? (
-                <span className="font-medium">
-                  Completed
-                </span>
-              ) : (
-                <button
-                  onClick={() => completeHabit(habit.id)}
-                  className="rounded bg-black px-3 py-2 text-white"
-                >
-                  Complete Today
-                </button>
+                  <p className="text-sm">
+                    {habit.description}
+                  </p>
+                </div>
+
+                {habit.completedToday ? (
+                  <span className="font-medium">
+                    Completed
+                  </span>
+                ) : (
+                  <button
+                    onClick={() =>
+                      completeHabit(habit.id)
+                    }
+                    className="rounded bg-black px-3 py-2 text-white"
+                  >
+                    Complete Today
+                  </button>
+                )}
+              </div>
+
+              {habit.completedToday && (
+                <div className="mt-4">
+                  {!habit.reflection? (
+                    <>
+                      <textarea
+                        defaultValue=""
+                        onChange={(event) =>
+                          setReflections({
+                            ...reflections,
+                            [habit.id]:
+                              event.target.value,
+                          })
+                        }
+                        placeholder="Write your reflection..."
+                        className="w-full rounded border px-4 py-2"
+                      />
+
+                      <button
+                        onClick={() =>
+                          completeHabit(
+                            habit.id,
+                            reflections[habit.id] ?? null
+                          )
+                        }
+                        className="mt-2 rounded bg-black px-4 py-2 text-white"
+                      >
+                        Save Reflection
+                      </button>
+                    </>
+                  ) : (
+                    <p className="mt-2 text-sm text-gray-600">
+                      Latest Reflection: {habit.reflection}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           ))}
@@ -129,5 +205,4 @@ export default function Home() {
       </div>
     </main>
   );
-
 }
