@@ -1,17 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-type Habit = {
-  id: number;
-  name: string;
-  description: string;
-  completedToday: boolean;
-  reflection: string | null;
-};
+import { HabitWithCheckIn } from "@/app/types/api/habits";
 
 export default function Home() {
-  const [habits, setHabits] = useState<Habit[]>([]);
+  const [habits, setHabits] = useState<HabitWithCheckIn[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
